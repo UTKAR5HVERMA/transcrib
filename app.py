@@ -1,36 +1,16 @@
-from fastapi import FastAPI, File, UploadFile
-from fastapi.responses import JSONResponse
-from pyannote.audio import Pipeline
-import whisper
-from pydub import AudioSegment
-import os
-import uuid
-import tempfile
-
-# Set ffmpeg path (make sure this path is valid on your system)
-os.environ["PATH"] += os.pathsep + r"C:\ffmpeg\bin"
-
-# Load models at startup
-pipeline = Pipeline.from_pretrained(
-    "pyannote/speaker-diarization"
-)
-whisper_model = whisper.load_model("base")
-
-app = FastAPI()
-
 @app.post("/transcribe/")
 async def transcribe_audio(file: UploadFile = File(...)):
     try:
-        # Save uploaded MP3 file to temp location
-        with tempfile.NamedTemporaryFile(delete=False, suffix=".mp3") as tmp_mp3:
-            tmp_mp3.write(await file.read())
-            mp3_path = tmp_mp3.name
+        # Check file type
+        if not file.filename.lower().endswith(".wav"):
+            return JSONResponse(content={"error": "Only WAV files are supported."}, status_code=400)
 
-        # Convert MP3 to WAV
-        wav_path = mp3_path.replace(".mp3", ".wav")
-        AudioSegment.from_file(mp3_path).export(wav_path, format="wav")
+        # Save uploaded WAV file to temp location
+        with tempfile.NamedTemporaryFile(delete=False, suffix=".wav") as tmp_wav:
+            tmp_wav.write(await file.read())
+            wav_path = tmp_wav.name
 
-        # Run speaker diarization on WAV
+        # Run speaker diarization
         diarization = pipeline(wav_path)
 
         # Load audio for slicing
@@ -56,8 +36,6 @@ async def transcribe_audio(file: UploadFile = File(...)):
 
             os.remove(seg_file.name)
 
-        # Cleanup
-        os.remove(mp3_path)
         os.remove(wav_path)
 
         return JSONResponse(content=results)
