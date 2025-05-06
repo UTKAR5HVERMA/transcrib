@@ -1,3 +1,17 @@
+from fastapi import FastAPI, File, UploadFile
+from fastapi.responses import JSONResponse
+from pyannote.audio import Pipeline
+import whisper
+from pydub import AudioSegment
+import os
+import tempfile
+
+# Load models at startup
+pipeline = Pipeline.from_pretrained("pyannote/speaker-diarization")
+whisper_model = whisper.load_model("base")
+
+app = FastAPI()
+
 @app.post("/transcribe/")
 async def transcribe_audio(file: UploadFile = File(...)):
     try:
