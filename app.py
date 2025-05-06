@@ -14,7 +14,7 @@ os.environ["PATH"] += os.pathsep + r"C:\ffmpeg\bin"
 pipeline = Pipeline.from_pretrained(
     "pyannote/speaker-diarization"
 )
-whisper_model = whisper.load_model("medium")
+whisper_model = whisper.load_model("base")
 
 app = FastAPI()
 
