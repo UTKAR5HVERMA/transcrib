@@ -15,10 +15,6 @@ app = FastAPI()
 @app.post("/transcribe/")
 async def transcribe_audio(file: UploadFile = File(...)):
     try:
-        # Check file type
-        if not file.filename.lower().endswith(".wav"):
-            return JSONResponse(content={"error": "Only WAV files are supported."}, status_code=400)
-
         # Save uploaded WAV file to temp location
         with tempfile.NamedTemporaryFile(delete=False, suffix=".wav") as tmp_wav:
             tmp_wav.write(await file.read())
